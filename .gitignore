@@ -1,0 +1,24 @@
+**/Intermediate/
+**/Saved/
+**/DerivedDataCache/
+**/Binaries/
+*.sln
+*.vsconfig
+**/.vs/
+**/.git/
+# UE 额外临时文件
+**/Build/
+**/Plugins/*/Binaries/
+**/Plugins/*/Intermediate/
+**/Plugins/*/Saved/
+*.suo
+*.user
+*.db
+*.opendb
+*.VC.db
+Browse.VC.db
+# 操作系统相关文件
+.DS_Store
+Thumbs.db
+# 打包产物目录（若项目有单独打包目录，如 Packaging/）
+**/Packaging/
