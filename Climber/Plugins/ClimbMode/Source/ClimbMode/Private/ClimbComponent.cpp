@@ -4,7 +4,35 @@
 #include "ClimbComponent.h"
 #include "ClimbData.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
+
+void UClimbComponent::TickAutoActiveClimb()
+{
+	//扫描Character前面斜坡，墙面的角度
+	FHitResult OutHit;
+	FVector Start;
+	FVector End;
+	FRotator Rot;
+	FName ProFileName("Pawn");
+	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(CapsuleRadius,CapsuleHalfHeight);
+
+	if (GetWorld()->SweepSingleByProfile(OutHit, Start, End, Rot.Quaternion(), ProFileName, CollisionShape))
+	{
+		EClimbType ClimbType=GetClimbTypeBySlope(OutHit.ImpactNormal);
+		if(ClimbType==EClimbType::CT_None)
+		{
+			CancelClimb();
+		}
+		else
+		{
+			ActiveClimb();
+		}
+		SwitchClimbType(ClimbType);
+	}
+
+}
 
 // Sets default values for this component's properties
 UClimbComponent::UClimbComponent()
@@ -12,8 +40,7 @@ UClimbComponent::UClimbComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	OwnerCharacter = Cast<ACharacter>(GetOwner());
 }
 
 
@@ -21,6 +48,7 @@ UClimbComponent::UClimbComponent()
 void UClimbComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 
 	// ...
 	
@@ -33,6 +61,18 @@ void UClimbComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+EClimbType UClimbComponent::GetClimbTypeBySlope(FVector ImpactNormal) const
+{
+	//根据法线向量计算坡度角，判断属于哪个攀爬类型
+	FVector WorldUp = FVector(0, 0, 1);
+	// 2. 计算点积
+	float DotVal = FVector::DotProduct(ImpactNormal, WorldUp);
+	// 3. 反余弦求弧度，转角度，范围0~180
+	float Radian = FMath::Acos(DotVal);
+	float SurfaceAngle = FMath::RadiansToDegrees(Radian);
+	return ClimbData->GetClimbTypeByAngle(SurfaceAngle);
 }
 
 // =========================================================================
@@ -50,6 +90,8 @@ const FClimbInfo* UClimbComponent::GetCurrentClimbInfo() const
 
 bool UClimbComponent::CanMoveTo(const FVector& InputValue) const
 {
+	
+
 	// 未激活攀爬或没有有效类型时禁止移动
 	if (!bClimbActive || CurrentClimbType == EClimbType::CT_None)
 	{
@@ -106,6 +148,8 @@ void UClimbComponent::Move(const FVector& InputValue)
 
 void UClimbComponent::ActiveClimb()
 {
+
+
 	if (bClimbActive)
 	{
 		return;
@@ -113,12 +157,11 @@ void UClimbComponent::ActiveClimb()
 
 	bClimbActive = true;
 	CurrentClimbState = EClimbState::CS_Idle;
-
-	// 若已经存在有效的攀爬类型，则在激活时触发一次 Enter
-	if (CurrentClimbType != EClimbType::CT_None)
-	{
-		OnEnterClimbType(CurrentClimbType);
-	}
+	//关闭重力等物理效果的代码可以放在这里
+	//预存CMC的移动模式
+	CacheMovementMode = OwnerCharacter->GetCharacterMovement()->MovementMode;
+	//关闭CMC的移动模式
+	OwnerCharacter->GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 }
 
 void UClimbComponent::CancelClimb()
@@ -137,6 +180,8 @@ void UClimbComponent::CancelClimb()
 	bClimbActive = false;
 	CurrentClimbType = EClimbType::CT_None;
 	CurrentClimbState = EClimbState::CS_Idle;
+	//恢复CMC的移动模式
+	OwnerCharacter->GetCharacterMovement()->SetMovementMode(CacheMovementMode);
 }
 
 void UClimbComponent::SwitchClimbType(EClimbType NewClimbType)

@@ -18,6 +18,12 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CLIMBMODE_API UClimbComponent : public UActorComponent
 {
 	GENERATED_BODY()
+private:
+	ACharacter* OwnerCharacter = nullptr;	// 缓存的 Owner 的 Character 指针，方便调用相关接口
+	EMovementMode CacheMovementMode;
+	void TickAutoActiveClimb();
+	float CapsuleRadius;
+	float CapsuleHalfHeight;
 
 public:
 	// Sets default values for this component's properties
@@ -30,6 +36,7 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	EClimbType GetClimbTypeBySlope(FVector NormalVector) const;
 
 	// ---------- 数据 ----------
 

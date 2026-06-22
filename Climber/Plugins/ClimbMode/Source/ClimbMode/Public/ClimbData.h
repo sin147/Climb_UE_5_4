@@ -44,9 +44,10 @@ struct CLIMBMODE_API FClimbInfo
 	GENERATED_BODY()
 
 	// 该攀爬类型对应表面与水平面之间的角度（度），用于检测平面是否符合该攀爬类型
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb")
-	float SlopeAngle = 0.f;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb", meta = (ClampMax = "180", ClampMin = "0"))
+	float SlopeMinAngle = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb", meta = (ClampMax = "180", ClampMin = "0"))
+	float SlopeMaxAngle = 180.f;
 	// 该攀爬类型下，每个攀爬状态对应的动画资源
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb")
 	TMap<EClimbState, TSoftObjectPtr<UAnimSequenceBase>> ClimbAnims;
@@ -69,4 +70,5 @@ public:
 
 	/** 根据类型获取攀爬信息，若不存在返回 nullptr */
 	const FClimbInfo* GetClimbInfo(EClimbType ClimbType) const;
+	const EClimbType GetClimbTypeByAngle(float Angle) const;
 };
