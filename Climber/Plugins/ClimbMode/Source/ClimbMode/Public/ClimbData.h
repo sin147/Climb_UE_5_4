@@ -48,6 +48,11 @@ struct CLIMBMODE_API FClimbInfo
 	float SlopeMinAngle = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb", meta = (ClampMax = "180", ClampMin = "0"))
 	float SlopeMaxAngle = 180.f;
+
+	// 该攀爬类型下的移动速度（cm/s）。配合 DeltaTime 推进位移，越倾斜/越费力的类型可调小
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb", meta = (ClampMin = "0.0"))
+	float MoveSpeed = 200.f;
+
 	// 该攀爬类型下，每个攀爬状态对应的动画资源
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Climb")
 	TMap<EClimbState, TSoftObjectPtr<UAnimSequenceBase>> ClimbAnims;
